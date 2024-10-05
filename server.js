@@ -1,26 +1,27 @@
-// Importar los módulos necesarios
+// Importar módulos necesarios
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql2'); // Mantén la versión de mysql2 como antes
 const bodyParser = require('body-parser');
 const cors = require('cors');
-require('dotenv').config(); // Cargar variables de entorno desde .env
+require('dotenv').config(); // Cargar variables de entorno
 
-// Crear la aplicación de Express
+// Crear la aplicación Express
 const app = express();
-const port = process.env.PORT || 3000; // Usar el puerto definido en el entorno o el puerto 3000 por defecto
+const port = process.env.PORT || 8080; // Usa el puerto 8080 o el que esté definido en las variables de entorno
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // Servir archivos estáticos desde la carpeta 'public'
+app.use(express.static('public'));
 
-// Configurar la conexión a la base de datos usando las variables de entorno
+// Configurar la conexión a la base de datos
 const db = mysql.createConnection({
-    host: process.env.MYSQLHOST, // Host de la base de datos (desde .env o Railway)
-    user: process.env.MYSQLUSER, // Usuario de la base de datos (desde .env o Railway)
-    password: process.env.MYSQLPASSWORD, // Contraseña de la base de datos (desde .env o Railway)
-    database: process.env.MYSQLDATABASE, // Nombre de la base de datos (desde .env o Railway)
-    port: process.env.MYSQLPORT || 3306, // Puerto de la base de datos (desde .env o por defecto 3306)
+    host: process.env.DB_HOST,       // Definido en el archivo .env o Railway
+    user: process.env.DB_USER,       // Definido en el archivo .env o Railway
+    password: process.env.DB_PASS,   // Definido en el archivo .env o Railway
+    database: process.env.DB_NAME,   // Definido en el archivo .env o Railway
+    port: process.env.DB_PORT || 3306, // Puerto de la base de datos, por defecto 3306
+    connectTimeout: 10000 // Tiempo de espera para la conexión, aumentado a 10 segundos
 });
 
 // Conectar a la base de datos
@@ -32,65 +33,12 @@ db.connect((err) => {
     console.log('Conectado a la base de datos MySQL');
 });
 
-// Ruta de prueba para verificar que el servidor está funcionando
-app.get('/', (req, res) => {
-    res.send('¡El servidor está funcionando!');
-});
-
-// Ruta para obtener todas las tareas desde la base de datos
-app.get('/tareas', (req, res) => {
-    const sql = 'SELECT * FROM tareas';
-    db.query(sql, (err, results) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(results);
-        }
-    });
-});
-
-// Ruta para agregar una nueva tarea
-app.post('/tareas', (req, res) => {
-    const { descripcion, completada, creador } = req.body;
-    const sql = 'INSERT INTO tareas (descripcion, completada, creador) VALUES (?, ?, ?)';
-    db.query(sql, [descripcion, completada, creador], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.status(201).json({ message: 'Tarea agregada', id: result.insertId });
-        }
-    });
-});
-
-// Ruta para marcar una tarea como completada
-app.put('/tareas/:id', (req, res) => {
-    const { id } = req.params;
-    const { completada } = req.body;
-    const sql = 'UPDATE tareas SET completada = ? WHERE id = ?';
-    db.query(sql, [completada, id], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json({ message: 'Tarea actualizada' });
-        }
-    });
-});
-
-// Ruta para eliminar una tarea
-app.delete('/tareas/:id', (req, res) => {
-    const { id } = req.params;
-    const sql = 'DELETE FROM tareas WHERE id = ?';
-    db.query(sql, [id], (err, result) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json({ message: 'Tarea eliminada' });
-        }
-    });
+// Ruta de ejemplo para verificar la API
+app.get('/api', (req, res) => {
+    res.send('La API está funcionando correctamente');
 });
 
 // Iniciar el servidor
 app.listen(port, () => {
     console.log(`Servidor escuchando en http://localhost:${port}`);
 });
-
